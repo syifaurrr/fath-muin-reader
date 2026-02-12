@@ -2,6 +2,7 @@
   <div class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display h-screen flex overflow-hidden transition-colors duration-300">
     <Sidebar 
       :items="filteredChunks"
+      :sections="sections"
       :searchQuery="searchQuery"
       :activeId="activeId"
       @update:searchQuery="searchQuery = $event"
@@ -75,15 +76,22 @@ const activeId = ref('')
 const fontSize = ref(32) // Default size matching text-3xl
 const scrollContainer = ref(null)
 const scrollProgress = ref(0)
+const sections = ref([])
 
 // Load data
 onMounted(async () => {
   try {
-    const response = await fetch('/data.json')
-    if (!response.ok) throw new Error('Failed to load data')
-    chunks.value = await response.json()
+    const [dataRes, sectionsRes] = await Promise.all([
+      fetch('/data.json'),
+      fetch('/sections.json')
+    ])
+    if (!dataRes.ok) throw new Error('Failed to load data')
+    chunks.value = await dataRes.json()
     if (chunks.value.length > 0) {
         activeId.value = chunks.value[0].doc_id
+    }
+    if (sectionsRes.ok) {
+      sections.value = await sectionsRes.json()
     }
   } catch (e) {
     error.value = 'Error loading data: ' + e.message
